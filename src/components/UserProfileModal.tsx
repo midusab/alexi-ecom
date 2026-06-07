@@ -363,7 +363,7 @@ export function UserProfileModal({
                                       (order.status === 'Processing' && idx < 2);
                                     
                                     return (
-                                      <div key={idx} className="flex flex-col items-center gap-1.5 w-[60px] -ml-[30px] first:ml-0 last:-mr-[30px]" style={{ left: `${idx * 33.33}%` }}>
+                                      <div key={`order-step-${order.id}-${step}`} className="flex flex-col items-center gap-1.5 w-[60px] -ml-[30px] first:ml-0 last:-mr-[30px]" style={{ left: `${idx * 33.33}%` }}>
                                         <div className={`w-5 h-5 rounded-full flex items-center justify-center z-10 border-2 ${isActive ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-transparent'}`}>
                                           {isActive && <Check className="w-3 h-3" strokeWidth={3} />}
                                         </div>
@@ -384,7 +384,7 @@ export function UserProfileModal({
                               </p>
                               <ul className="space-y-3">
                                 {order.items.map((item, i) => (
-                                  <li key={i} className="flex items-center gap-3">
+                                  <li key={`order-item-${order.id}-${item.id}-${i}`} className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0">
                                       {item.image ? (
                                         <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
@@ -562,7 +562,7 @@ export function UserProfileModal({
                             selectedTrackingOrder.status === 'Shipped' ? 2 :
                             selectedTrackingOrder.status === 'Delivered' ? 0 : 0
                           ).map((event, idx) => (
-                            <div key={idx} className="relative">
+                            <div key={`tracking-event-${selectedTrackingOrder.id}-${idx}`} className="relative">
                               <div className={`absolute -left-[25px] top-1 w-4 h-4 rounded-full border-2 border-white shadow-sm transition-colors ${idx === 0 ? 'bg-blue-600 animate-pulse ring-4 ring-blue-100' : 'bg-slate-300'}`}></div>
                               <div className="flex flex-col">
                                 <div className="flex items-center justify-between mb-1">

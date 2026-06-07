@@ -197,7 +197,7 @@ export function AdminDashboard({
                     <h4 className="font-bold text-slate-900 mb-6">Top Selling Models</h4>
                     <div className="space-y-6">
                       {allProducts.slice(0, 3).map((p, idx) => (
-                        <div key={`overview-top-${p.id}`}>
+                        <div key={`overview-top-${p.id}-${idx}`}>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm font-medium text-slate-800">{p.name}</span>
                             <span className="text-sm font-bold text-slate-900">{25 - idx * 5} Sales</span>
@@ -354,8 +354,8 @@ export function AdminDashboard({
                       { email: 'user_3@gmail.com', name: 'Robert Maina', status: 'Active', date: '2026-06-05' },
                       { email: 'user_4@gmail.com', name: 'Alice Wambui', status: 'Active', date: '2026-06-05' },
                       { email: 'user_5@gmail.com', name: 'Samuel Otieno', status: 'Banned', date: '2026-06-04' },
-                    ].map((user, idx) => (
-                      <div key={`user-insight-${idx}`} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    ].map((user) => (
+                      <div key={`user-insight-${user.email}`} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500">
                             {user.name.charAt(0)}

@@ -24,8 +24,8 @@ export default function App() {
     phone: '+254 712 345 678',
     location: 'Westlands, Nairobi',
     notifications: [
-      { id: '1', title: 'Order Shipped!', message: 'Your order #523614 is on its way.', date: '2 hours ago', read: false },
-      { id: '2', title: 'Welcome!', message: 'Thanks for joining our tech store.', date: '3 days ago', read: true }
+      { id: 'n-1', title: 'Order Shipped!', message: 'Your order #523614 is on its way.', date: '2 hours ago', read: false },
+      { id: 'n-2', title: 'Welcome!', message: 'Thanks for joining our tech store.', date: '3 days ago', read: true }
     ],
     orders: [
       {
@@ -147,7 +147,13 @@ export default function App() {
   };
 
   // Admin Handlers
-  const handleAddProduct = (p: Product) => setProducts([p, ...products]);
+  const handleAddProduct = (p: Product) => {
+    setProducts(prev => {
+      const exists = prev.some(item => item.id === p.id);
+      if (exists) return prev.map(item => item.id === p.id ? p : item);
+      return [p, ...prev];
+    });
+  };
   const handleUpdateProduct = (updated: Product) => setProducts(products.map(p => p.id === updated.id ? updated : p));
   const handleDeleteProduct = (id: string) => setProducts(products.filter(p => p.id !== id));
   const handleUpdateOrderStatus = (orderId: string, status: Order['status']) => {
@@ -394,7 +400,7 @@ export default function App() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
                   {['Technical Support', 'Order Tracking', 'Warranty & Repairs', 'Live Chat'].map((topic, i) => (
-                    <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 hover:-translate-y-1 transition-transform cursor-pointer">
+                    <div key={`support-topic-${i}`} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 hover:-translate-y-1 transition-transform cursor-pointer">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0 font-bold">
                         {i + 1}
                       </div>
@@ -423,7 +429,7 @@ export default function App() {
               { title: 'Sustainability', desc: 'Our green initiatives', img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=600&auto=format&fit=crop' },
               { title: 'Events', desc: 'Upcoming product launches', img: 'https://images.unsplash.com/photo-1540317580384-e5d43867caa6?q=80&w=600&auto=format&fit=crop' }
             ].map((item, i) => (
-              <div key={i} className="group relative rounded-2xl overflow-hidden aspect-[4/5] cursor-pointer">
+              <div key={`explore-item-${i}`} className="group relative rounded-2xl overflow-hidden aspect-[4/5] cursor-pointer">
                 <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" crossOrigin="anonymous" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent flex flex-col justify-end p-6">
                   <h3 className="text-white font-display font-bold text-xl mb-1">{item.title}</h3>
