@@ -17,7 +17,29 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import { Smartphone, LayoutDashboard } from 'lucide-react';
 
 export default function App() {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>({
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'admin',
+    phone: '+254 712 345 678',
+    location: 'Westlands, Nairobi',
+    notifications: [
+      { id: '1', title: 'Order Shipped!', message: 'Your order #523614 is on its way.', date: '2 hours ago', read: false },
+      { id: '2', title: 'Welcome!', message: 'Thanks for joining our tech store.', date: '3 days ago', read: true }
+    ],
+    orders: [
+      {
+        id: '523614',
+        date: '2024-06-05',
+        total: 125400,
+        status: 'Shipped',
+        trackingNumber: 'TRK-982741',
+        items: [
+          { id: '1', name: 'iPhone 15 Pro', quantity: 1, price: 125400, image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=800&auto=format&fit=crop' }
+        ]
+      }
+    ]
+  });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);

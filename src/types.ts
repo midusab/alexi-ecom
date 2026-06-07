@@ -33,12 +33,21 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface TrackingEvent {
+  status: string;
+  location: string;
+  timestamp: string;
+  description: string;
+}
+
 export interface Order {
   id: string;
   date: string;
   total: number;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
   items: { id: string; name: string; quantity: number; price: number; image?: string; brand?: string }[];
+  trackingNumber?: string;
+  trackingEvents?: TrackingEvent[];
 }
 
 export interface Notification {
