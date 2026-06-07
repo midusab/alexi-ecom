@@ -8,10 +8,11 @@ import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { CookieBanner } from './components/CookieBanner';
 import { FlashSaleCarousel } from './components/FlashSaleCarousel';
+import { WhatsNewCarousel } from './components/WhatsNewCarousel';
 import { ProductSuggestions } from './components/ProductSuggestions';
 import { AdminDashboard } from './components/AdminDashboard';
 import { products as initialProducts } from './data';
-import { Product, CartItem, UserProfile, Order } from './types';
+import { Product, CartItem, UserProfile, Order, AppConfig } from './types';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { Smartphone, LayoutDashboard } from 'lucide-react';
 
@@ -32,6 +33,34 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+
+  const [config, setConfig] = useState<AppConfig>({
+    flashSale: {
+      endTime: new Date(Date.now() + 1000 * 60 * 60 * 4 + 1000 * 60 * 23).toISOString(),
+      productIds: initialProducts.slice(0, 5).map(p => p.id),
+      discountPercentage: 15
+    },
+    whatsNew: {
+      items: [
+        {
+          id: 'wn-1',
+          title: 'iPhone 15 Pro Max',
+          description: 'The ultimate iPhone is here. Titanium design, A17 Pro chip, and a 48MP main camera.',
+          image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=800&auto=format&fit=crop',
+          link: '#products',
+          color: '#3b82f6'
+        },
+        {
+          id: 'wn-2',
+          title: 'Samsung S24 Ultra',
+          description: 'Epic, just like that. Experience AI-powered photography and the fastest processor yet.',
+          image: 'https://images.unsplash.com/photo-1707153673562-b94e3391702f?q=80&w=800&auto=format&fit=crop',
+          link: '#products',
+          color: '#10b981'
+        }
+      ]
+    }
+  });
 
   useEffect(() => {
     // Simulate data loading
@@ -162,6 +191,8 @@ export default function App() {
         onDeleteProduct={handleDeleteProduct}
         allOrders={allOrders}
         onUpdateOrderStatus={handleUpdateOrderStatus}
+        config={config}
+        onUpdateConfig={setConfig}
       />
 
       {user && (
@@ -238,10 +269,13 @@ export default function App() {
           </div>
         </section>
 
+        <WhatsNewCarousel items={config.whatsNew.items} />
+
         <FlashSaleCarousel 
           products={products} 
           onProductClick={(product) => setSelectedProduct(product)}
           onAddToCart={handleAddToCart}
+          config={config.flashSale}
         />
 
         <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">

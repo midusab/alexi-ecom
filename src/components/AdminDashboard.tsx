@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, ChevronRight, BarChart3, Package, ShoppingCart, 
   Settings, Users, Plus, Edit2, Trash2, Check, ExternalLink,
-  Smartphone, Tag, Zap, Wallet
+  Smartphone, Tag, Zap, Wallet, Layout, Clock, LayoutGrid
 } from 'lucide-react';
-import { Product, Order, UserProfile } from '../types';
+import { Product, Order, UserProfile, AppConfig } from '../types';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -16,9 +16,11 @@ interface AdminDashboardProps {
   onDeleteProduct: (id: string) => void;
   allOrders: Order[];
   onUpdateOrderStatus: (orderId: string, status: Order['status']) => void;
+  config: AppConfig;
+  onUpdateConfig: (config: AppConfig) => void;
 }
 
-type Tab = 'overview' | 'products' | 'orders' | 'users';
+type Tab = 'overview' | 'products' | 'orders' | 'users' | 'storefront';
 
 export function AdminDashboard({ 
   isOpen, 
@@ -28,7 +30,9 @@ export function AdminDashboard({
   onUpdateProduct, 
   onDeleteProduct,
   allOrders,
-  onUpdateOrderStatus
+  onUpdateOrderStatus,
+  config,
+  onUpdateConfig
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -124,6 +128,12 @@ export function AdminDashboard({
                 onClick={() => setActiveTab('users')} 
                 icon={<Users className="w-5 h-5" />} 
                 label="User Insights" 
+              />
+              <NavBtn 
+                active={activeTab === 'storefront'} 
+                onClick={() => setActiveTab('storefront')} 
+                icon={<Layout className="w-5 h-5" />} 
+                label="Storefront" 
               />
             </nav>
 
@@ -362,6 +372,199 @@ export function AdminDashboard({
                         }`}>
                           {user.status}
                         </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'storefront' && (
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h3 className="text-3xl font-bold text-slate-900 font-display">Storefront Management</h3>
+                    <p className="text-slate-500">Configure promotional banners and flash sales.</p>
+                  </div>
+                </div>
+
+                {/* Flash Sale Control */}
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-50 text-red-600 rounded-xl">
+                      <Zap className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-slate-900">Flash Sale Settings</h4>
+                      <p className="text-xs text-slate-500">Manage the active countdown and eligible products.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">End Date & Time</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="datetime-local" 
+                            defaultValue={config.flashSale.endTime.slice(0, 16)}
+                            onChange={(e) => onUpdateConfig({
+                              ...config,
+                              flashSale: { ...config.flashSale, endTime: new Date(e.target.value).toISOString() }
+                            })}
+                            className="flex-1 p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" 
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Discount Percentage (%)</label>
+                        <input 
+                          type="number" 
+                          defaultValue={config.flashSale.discountPercentage}
+                          onChange={(e) => onUpdateConfig({
+                            ...config,
+                            flashSale: { ...config.flashSale, discountPercentage: Number(e.target.value) }
+                          })}
+                          className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Selected Products</label>
+                      <div className="max-h-[200px] overflow-y-auto border border-slate-100 rounded-2xl p-2 space-y-1">
+                        {allProducts.map(p => (
+                          <label key={`fs-p-select-${p.id}`} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
+                            <input 
+                              type="checkbox" 
+                              checked={config.flashSale.productIds.includes(p.id)}
+                              onChange={(e) => {
+                                const newIds = e.target.checked 
+                                  ? [...config.flashSale.productIds, p.id]
+                                  : config.flashSale.productIds.filter(id => id !== p.id);
+                                onUpdateConfig({
+                                  ...config,
+                                  flashSale: { ...config.flashSale, productIds: newIds }
+                                });
+                              }}
+                              className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <img src={p.image} className="w-8 h-8 rounded object-contain bg-slate-50" />
+                            <span className="text-sm font-medium text-slate-800 truncate">{p.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* What's New Carousel Management */}
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <LayoutGrid className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-900">"What's New" Carousel</h4>
+                        <p className="text-xs text-slate-500">Featured banners for the main page hero section.</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newItem = {
+                          id: `wn-${Date.now()}`,
+                          title: 'New Arrival',
+                          description: 'Discover the latest in mobile technology.',
+                          image: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?q=80&w=800&auto=format&fit=crop',
+                          link: '#products',
+                          color: '#3b82f6'
+                        };
+                        onUpdateConfig({
+                          ...config,
+                          whatsNew: { ...config.whatsNew, items: [...config.whatsNew.items, newItem] }
+                        });
+                      }}
+                      className="btn-outline flex items-center gap-2 py-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Slide
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {config.whatsNew.items.map((item, index) => (
+                      <div key={item.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-6 relative group">
+                        <button 
+                          onClick={() => {
+                            const newItems = config.whatsNew.items.filter(it => it.id !== item.id);
+                            onUpdateConfig({ ...config, whatsNew: { ...config.whatsNew, items: newItems } });
+                          }}
+                          className="absolute -top-2 -right-2 w-8 h-8 bg-white text-rose-500 rounded-full shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        
+                        <div className="w-full md:w-48 aspect-video md:aspect-[4/5] bg-white rounded-xl border border-slate-200 overflow-hidden shrink-0">
+                          <img src={item.image} className="w-full h-full object-cover" />
+                        </div>
+                        
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="col-span-full">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1 block">Title</label>
+                            <input 
+                              type="text" 
+                              value={item.title}
+                              onChange={(e) => {
+                                const newItems = [...config.whatsNew.items];
+                                newItems[index] = { ...item, title: e.target.value };
+                                onUpdateConfig({ ...config, whatsNew: { ...config.whatsNew, items: newItems } });
+                              }}
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                            />
+                          </div>
+                          <div className="col-span-full">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1 block">Description</label>
+                            <textarea 
+                              value={item.description}
+                              rows={2}
+                              onChange={(e) => {
+                                const newItems = [...config.whatsNew.items];
+                                newItems[index] = { ...item, description: e.target.value };
+                                onUpdateConfig({ ...config, whatsNew: { ...config.whatsNew, items: newItems } });
+                              }}
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1 block">Image URL</label>
+                            <input 
+                              type="text" 
+                              value={item.image}
+                              onChange={(e) => {
+                                const newItems = [...config.whatsNew.items];
+                                newItems[index] = { ...item, image: e.target.value };
+                                onUpdateConfig({ ...config, whatsNew: { ...config.whatsNew, items: newItems } });
+                              }}
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1 block">Theme Color</label>
+                            <div className="flex gap-2 items-center">
+                              <input 
+                                type="color" 
+                                value={item.color}
+                                onChange={(e) => {
+                                  const newItems = [...config.whatsNew.items];
+                                  newItems[index] = { ...item, color: e.target.value };
+                                  onUpdateConfig({ ...config, whatsNew: { ...config.whatsNew, items: newItems } });
+                                }}
+                                className="w-8 h-8 rounded cursor-pointer"
+                              />
+                              <span className="text-xs font-mono text-slate-500">{item.color}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -49,6 +49,24 @@ export interface Notification {
   read: boolean;
 }
 
+export interface AppConfig {
+  flashSale: {
+    endTime: string; // ISO string
+    productIds: string[];
+    discountPercentage: number;
+  };
+  whatsNew: {
+    items: {
+      id: string;
+      title: string;
+      description: string;
+      image: string;
+      link: string;
+      color: string;
+    }[];
+  };
+}
+
 export interface UserProfile {
   name: string;
   email: string;

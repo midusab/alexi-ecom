@@ -1,35 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Timer, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Product } from '../types';
+import { Product, AppConfig } from '../types';
 
 interface FlashSaleCarouselProps {
   products: Product[];
   onProductClick: (product: Product) => void;
   onAddToCart: (product: Product) => void;
+  config: AppConfig['flashSale'];
 }
 
-export function FlashSaleCarousel({ products, onProductClick, onAddToCart }: FlashSaleCarouselProps) {
-  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 23, seconds: 15 });
+export function FlashSaleCarousel({ products, onProductClick, onAddToCart, config }: FlashSaleCarouselProps) {
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = new Date(config.endTime).getTime() - new Date().getTime();
+      
+      if (difference > 0) {
+        return {
+          hours: Math.floor((difference / (1000 * 60 * 60))),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        };
+      }
+      return { hours: 0, minutes: 0, seconds: 0 };
+    };
+
+    setTimeLeft(calculateTimeLeft());
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return prev;
-      });
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [config.endTime]);
 
-  const flashSaleProducts = products.slice(0, 5).map(p => ({
-    ...p,
-    salePrice: Math.floor(p.price * 0.85), // 15% off for flash sale
-    discount: 15
-  }));
+  const flashSaleProducts = products
+    .filter(p => config.productIds.includes(p.id))
+    .map(p => ({
+      ...p,
+      salePrice: Math.floor(p.price * (1 - config.discountPercentage / 100)),
+      discount: config.discountPercentage
+    }));
+
+  if (flashSaleProducts.length === 0) return null;
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
