@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Alexi",
+  "description": "An ecommerce website for selling mobile phones with a polished user interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  
+  /* Overriding default blue to Coca-Cola Red shades */
+  --color-blue-50: #fff0f0;
+  --color-blue-100: #ffdcdc;
+  --color-blue-200: #ffc1c1;
+  --color-blue-300: #ff9898;
+  --color-blue-400: #ff5f5f;
+  --color-blue-500: #ff2d2d;
+  --color-blue-600: #F40009;  /* Coca-Cola Red */
+  --color-blue-700: #c60005;
+  --color-blue-800: #a40005;
+  --color-blue-900: #880508;
+  --color-blue-950: #4a0001;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+@layer components {
+  /* Shared Base Button Styles */
+  .btn-primary, .btn-secondary, .btn-outline, .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 focus:ring-blue-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-400;
+  }
+  
+  .btn-outline {
+    @apply border border-slate-200 bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900 focus:ring-slate-400;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-400 px-3 py-2;
+  }
+
+  .btn-icon {
+    @apply p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 transform hover:scale-110 active:scale-90;
+  }
+
+  /* Legacy utility for direct use */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+}
