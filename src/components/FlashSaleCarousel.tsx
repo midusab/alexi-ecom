@@ -101,7 +101,7 @@ export function FlashSaleCarousel({ products, onProductClick, onAddToCart, confi
         >
           {flashSaleProducts.map((product) => (
             <motion.div
-              key={product.id}
+              key={`flash-${product.id}`}
               whileHover={{ y: -4 }}
               className="flex-none w-48 sm:w-56 group"
             >

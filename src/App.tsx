@@ -330,7 +330,7 @@ export default function App() {
             ) : filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <ProductCard
-                  key={product.id}
+                  key={`store-product-${product.id}`}
                   product={product}
                   onAddToCart={handleAddToCart}
                   onClick={() => { setSelectedProduct(product); }}

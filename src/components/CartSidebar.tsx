@@ -171,7 +171,7 @@ export function CartSidebar({ isOpen, onClose, initialTab = 'cart', items, onUpd
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.9 }}
-                          key={item.id}
+                          key={`ws-${item.id}`}
                           className="flex gap-4"
                         >
                           <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0">
@@ -242,7 +242,7 @@ export function CartSidebar({ isOpen, onClose, initialTab = 'cart', items, onUpd
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            key={item.id}
+                            key={`ct-${item.id}`}
                             className="flex gap-4"
                           >
                             <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0">
