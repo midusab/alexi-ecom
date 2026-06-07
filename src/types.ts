@@ -24,6 +24,9 @@ export interface Product {
   };
   reviews?: Review[];
   videoUrl?: string;
+  isFeatured?: boolean;
+  isOffer?: boolean;
+  offerText?: string;
 }
 
 export interface CartItem extends Product {

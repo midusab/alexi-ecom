@@ -33,8 +33,20 @@ export function ProductCard({ product, onAddToCart, onClick, isWishlisted, onTog
           className={`object-cover w-full h-full transition-all duration-700 group-hover:scale-105 ${imageLoaded ? 'scale-100 blur-0' : 'scale-105 blur-sm'}`}
           crossOrigin="anonymous"
         />
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-semibold text-slate-700">
-          {product.brand}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+          <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-semibold text-slate-700 shadow-sm border border-slate-100/50">
+            {product.brand}
+          </div>
+          {product.isFeatured && (
+            <div className="bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg flex items-center gap-1 leading-tight transform -rotate-1">
+              FEATURED
+            </div>
+          )}
+          {product.isOffer && (
+            <div className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg leading-tight transform rotate-2">
+              {product.offerText || 'OFFER'}
+            </div>
+          )}
         </div>
         <button
           onClick={(e) => {

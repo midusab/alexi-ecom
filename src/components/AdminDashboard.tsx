@@ -18,7 +18,7 @@ interface AdminDashboardProps {
   onUpdateOrderStatus: (orderId: string, status: Order['status']) => void;
 }
 
-type Tab = 'overview' | 'products' | 'orders' | 'inventory';
+type Tab = 'overview' | 'products' | 'orders' | 'users';
 
 export function AdminDashboard({ 
   isOpen, 
@@ -43,13 +43,16 @@ export function AdminDashboard({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const productData: Product = {
-      id: editingProduct?.id || Math.random().toString(36).substr(2, 9),
+      id: editingProduct?.id || `p-${Math.random().toString(36).substr(2, 9)}`,
       name: formData.get('name') as string,
       brand: formData.get('brand') as string,
       price: Number(formData.get('price')),
       description: formData.get('description') as string,
       image: formData.get('image') as string || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=800&auto=format&fit=crop',
-      features: (formData.get('features') as string).split(',').map(f => f.trim()),
+      features: (formData.get('features') as string).split(',').map(f => f.trim()).filter(Boolean),
+      isFeatured: formData.get('isFeatured') === 'on',
+      isOffer: formData.get('isOffer') === 'on',
+      offerText: formData.get('offerText') as string,
       specs: {
         screen: formData.get('screen') as string,
         processor: formData.get('processor') as string,
@@ -108,7 +111,7 @@ export function AdminDashboard({
                 active={activeTab === 'products'} 
                 onClick={() => setActiveTab('products')} 
                 icon={<Package className="w-5 h-5" />} 
-                label="Product Manager" 
+                label="Products & Offers" 
               />
               <NavBtn 
                 active={activeTab === 'orders'} 
@@ -117,8 +120,8 @@ export function AdminDashboard({
                 label="Orders & Payments" 
               />
               <NavBtn 
-                active={activeTab === 'inventory'} 
-                onClick={() => setActiveTab('inventory')} 
+                active={activeTab === 'users'} 
+                onClick={() => setActiveTab('users')} 
                 icon={<Users className="w-5 h-5" />} 
                 label="User Insights" 
               />
@@ -162,7 +165,7 @@ export function AdminDashboard({
                     </h4>
                     <div className="space-y-4">
                       {allOrders.slice(0, 5).map(order => (
-                        <div key={order.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                        <div key={`overview-activity-${order.id}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                           <div className="flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                             <div>
@@ -183,14 +186,14 @@ export function AdminDashboard({
                   <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                     <h4 className="font-bold text-slate-900 mb-6">Top Selling Models</h4>
                     <div className="space-y-6">
-                      {allProducts.slice(0, 3).map(p => (
-                        <div key={p.id}>
+                      {allProducts.slice(0, 3).map((p, idx) => (
+                        <div key={`overview-top-${p.id}`}>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm font-medium text-slate-800">{p.name}</span>
-                            <span className="text-sm font-bold text-slate-900">14 Sales</span>
+                            <span className="text-sm font-bold text-slate-900">{25 - idx * 5} Sales</span>
                           </div>
                           <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-600 rounded-full" style={{ width: `${Math.random() * 60 + 20}%` }}></div>
+                            <div className="h-full bg-blue-600 rounded-full" style={{ width: `${90 - idx * 20}%` }}></div>
                           </div>
                         </div>
                       ))}
@@ -225,7 +228,7 @@ export function AdminDashboard({
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {allProducts.map(product => (
-                        <tr key={product.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={`manage-product-${product.id}`} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <img src={product.image} className="w-10 h-10 rounded-lg object-contain bg-slate-50 p-1" />
@@ -281,7 +284,7 @@ export function AdminDashboard({
                        <div className="p-12 text-center text-slate-400">No orders to display.</div>
                      ) : (
                        allOrders.map(order => (
-                         <div key={order.id} className="p-6 hover:bg-slate-50 transition-colors">
+                         <div key={`manage-order-${order.id}`} className="p-6 hover:bg-slate-50 transition-colors">
                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                              <div>
                                <div className="flex items-center gap-3 mb-1">
@@ -327,15 +330,41 @@ export function AdminDashboard({
               </div>
             )}
 
-            {activeTab === 'inventory' && (
-              <div className="flex flex-col items-center justify-center p-20 text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                  <Users className="w-8 h-8 text-slate-400" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900">User Data & Segmentation</h3>
-                <p className="text-slate-500 max-w-sm">This module tracks user behavior, search trends, and localized demand forecasts to optimize your stock levels.</p>
-                <div className="p-4 bg-blue-50 text-blue-700 text-sm rounded-xl font-medium">
-                  Feature coming in Next Update
+            {activeTab === 'users' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h3 className="text-2xl font-bold text-slate-900 font-display">User Activity</h3>
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-slate-100">
+                    <p className="text-slate-500 text-sm">Monitor recent user registrations and login activities.</p>
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    {[
+                      { email: 'user_1@gmail.com', name: 'John Doe', status: 'Active', date: '2026-06-07' },
+                      { email: 'user_2@gmail.com', name: 'Jane Smith', status: 'Inactive', date: '2026-06-06' },
+                      { email: 'user_3@gmail.com', name: 'Robert Maina', status: 'Active', date: '2026-06-05' },
+                      { email: 'user_4@gmail.com', name: 'Alice Wambui', status: 'Active', date: '2026-06-05' },
+                      { email: 'user_5@gmail.com', name: 'Samuel Otieno', status: 'Banned', date: '2026-06-04' },
+                    ].map((user, idx) => (
+                      <div key={`user-insight-${idx}`} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500">
+                            {user.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{user.name}</p>
+                            <p className="text-xs text-slate-500">{user.email} • Registered {user.date}</p>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          user.status === 'Active' ? 'bg-emerald-100 text-emerald-600' :
+                          user.status === 'Banned' ? 'bg-rose-100 text-rose-600' :
+                          'bg-slate-100 text-slate-500'
+                        }`}>
+                          {user.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -424,6 +453,31 @@ export function AdminDashboard({
                 <div>
                    <label className="block text-sm font-bold text-slate-700 mb-2">Key Features (comma separated)</label>
                    <input name="features" defaultValue={editingProduct?.features.join(', ')} className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input type="checkbox" name="isFeatured" defaultChecked={editingProduct?.isFeatured} className="peer sr-only" />
+                        <div className="w-10 h-6 bg-slate-200 rounded-full transition-colors peer-checked:bg-blue-600"></div>
+                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">Mark as Featured Product</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input type="checkbox" name="isOffer" defaultChecked={editingProduct?.isOffer} className="peer sr-only" />
+                        <div className="w-10 h-6 bg-slate-200 rounded-full transition-colors peer-checked:bg-emerald-600"></div>
+                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">Set as Special Offer</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Offer Badge Text (optional)</label>
+                    <input name="offerText" defaultValue={editingProduct?.offerText} placeholder="e.g. 15% OFF" className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
