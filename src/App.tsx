@@ -32,7 +32,10 @@ export default function App() {
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('alexi_products');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -43,33 +46,42 @@ export default function App() {
 
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
 
-  const [config, setConfig] = useState<AppConfig>({
-    flashSale: {
-      endTime: new Date(Date.now() + 1000 * 60 * 60 * 4 + 1000 * 60 * 23).toISOString(),
-      productIds: initialProducts.slice(0, 5).map(p => p.id),
-      discountPercentage: 15
-    },
-    whatsNew: {
-      items: [
-        {
-          id: 'wn-1',
-          title: 'iPhone 15 Pro Max',
-          description: 'The ultimate iPhone is here. Titanium design, A17 Pro chip, and a 48MP main camera.',
-          image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=800&auto=format&fit=crop',
-          link: '#products',
-          color: '#3b82f6'
-        },
-        {
-          id: 'wn-2',
-          title: 'Samsung S24 Ultra',
-          description: 'Epic, just like that. Experience AI-powered photography and the fastest processor yet.',
-          image: 'https://images.unsplash.com/photo-1707153673562-b94e3391702f?q=80&w=800&auto=format&fit=crop',
-          link: '#products',
-          color: '#10b981'
-        }
-      ]
-    }
+  const [config, setConfig] = useState<AppConfig>(() => {
+    const saved = localStorage.getItem('alexi_store_config');
+    if (saved) return JSON.parse(saved);
+    return {
+      flashSale: {
+        endTime: new Date(Date.now() + 1000 * 60 * 60 * 4 + 1000 * 60 * 23).toISOString(),
+        productIds: [],
+        discountPercentage: 15
+      },
+      whatsNew: {
+        items: [
+          {
+            id: 'wn-1',
+            title: 'iPhone 15 Pro Max',
+            description: 'The ultimate iPhone is here. Titanium design, A17 Pro chip, and a 48MP main camera.',
+            image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=800&auto=format&fit=crop',
+            link: '#products',
+            color: '#3b82f6'
+          },
+          {
+            id: 'wn-2',
+            title: 'Samsung S24 Ultra',
+            description: 'Epic, just like that. Experience AI-powered photography and the fastest processor yet.',
+            image: 'https://images.unsplash.com/photo-1707153673562-b94e3391702f?q=80&w=800&auto=format&fit=crop',
+            link: '#products',
+            color: '#10b981'
+          }
+        ]
+      }
+    };
   });
+
+  const handleUpdateConfig = (newConfig: AppConfig) => {
+    setConfig(newConfig);
+    localStorage.setItem('alexi_store_config', JSON.stringify(newConfig));
+  };
 
   useEffect(() => {
     // Simulate data loading
@@ -155,12 +167,29 @@ export default function App() {
   const handleAddProduct = (p: Product) => {
     setProducts(prev => {
       const exists = prev.some(item => item.id === p.id);
-      if (exists) return prev.map(item => item.id === p.id ? p : item);
-      return [p, ...prev];
+      const updated = exists 
+        ? prev.map(item => item.id === p.id ? p : item)
+        : [p, ...prev];
+      localStorage.setItem('alexi_products', JSON.stringify(updated));
+      return updated;
     });
   };
-  const handleUpdateProduct = (updated: Product) => setProducts(products.map(p => p.id === updated.id ? updated : p));
-  const handleDeleteProduct = (id: string) => setProducts(products.filter(p => p.id !== id));
+
+  const handleUpdateProduct = (updated: Product) => {
+    setProducts(prev => {
+      const updatedList = prev.map(p => p.id === updated.id ? updated : p);
+      localStorage.setItem('alexi_products', JSON.stringify(updatedList));
+      return updatedList;
+    });
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    setProducts(prev => {
+      const updatedList = prev.filter(p => p.id !== id);
+      localStorage.setItem('alexi_products', JSON.stringify(updatedList));
+      return updatedList;
+    });
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -221,7 +250,7 @@ export default function App() {
         onUpdateOrderStatus={updateOrderStatus}
         allUsers={allUsers}
         config={config}
-        onUpdateConfig={setConfig}
+        onUpdateConfig={handleUpdateConfig}
       />
 
       {user && (
@@ -336,13 +365,22 @@ export default function App() {
               ))
             ) : (
               <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-12 text-slate-500">
-                <p className="text-lg">No products found matching "{searchQuery}".</p>
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="btn-ghost"
-                >
-                  Clear search
-                </button>
+                {searchQuery ? (
+                  <>
+                    <p className="text-lg">No products found matching "{searchQuery}".</p>
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="btn-ghost mt-2"
+                    >
+                      Clear search
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg">No products available in the store yet.</p>
+                    <p className="text-sm text-slate-400 mt-1">Check back later, or log in as an administrator to add devices.</p>
+                  </>
+                )}
               </div>
             )}
           </div>
