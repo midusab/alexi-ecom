@@ -15,37 +15,24 @@ import { products as initialProducts } from './data';
 import { Product, CartItem, UserProfile, Order, AppConfig } from './types';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { Smartphone, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function App() {
-  const [user, setUser] = useState<UserProfile | null>({
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'admin',
-    phone: '+254 712 345 678',
-    location: 'Westlands, Nairobi',
-    notifications: [
-      { id: 'n-1', title: 'Order Shipped!', message: 'Your order #523614 is on its way.', date: '2 hours ago', read: false },
-      { id: 'n-2', title: 'Welcome!', message: 'Thanks for joining our tech store.', date: '3 days ago', read: true }
-    ],
-    orders: [
-      {
-        id: '523614',
-        date: '2024-06-05',
-        total: 125400,
-        status: 'Shipped',
-        trackingNumber: 'TRK-982741',
-        items: [
-          { id: '1', name: 'iPhone 15 Pro', quantity: 1, price: 125400, image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=800&auto=format&fit=crop' }
-        ]
-      }
-    ]
-  });
+  const { 
+    user, 
+    logout, 
+    updateProfile, 
+    allUsers, 
+    allOrders, 
+    addOrder, 
+    updateOrderStatus 
+  } = useAuth();
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -90,16 +77,30 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Synchronize cart and wishlist per-user from localStorage
+  useEffect(() => {
+    if (user) {
+      const savedCart = localStorage.getItem(`cart_${user.email}`);
+      const savedWishlist = localStorage.getItem(`wishlist_${user.email}`);
+      setCartItems(savedCart ? JSON.parse(savedCart) : []);
+      setWishlistItems(savedWishlist ? JSON.parse(savedWishlist) : []);
+    } else {
+      setCartItems([]);
+      setWishlistItems([]);
+    }
+  }, [user]);
+
   const handleToggleWishlist = (product: Product) => {
     if (!user) {
       setIsAuthModalOpen(true);
       return;
     }
     setWishlistItems(prev => {
-      if (prev.find(p => p.id === product.id)) {
-        return prev.filter(p => p.id !== product.id);
-      }
-      return [...prev, product];
+      const updated = prev.find(p => p.id === product.id)
+        ? prev.filter(p => p.id !== product.id)
+        : [...prev, product];
+      localStorage.setItem(`wishlist_${user.email}`, JSON.stringify(updated));
+      return updated;
     });
   };
 
@@ -115,34 +116,38 @@ export default function App() {
     }
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevItems, { ...product, quantity: 1 }];
+      const updated = existingItem 
+        ? prevItems.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...prevItems, { ...product, quantity: 1 }];
+      localStorage.setItem(`cart_${user.email}`, JSON.stringify(updated));
+      return updated;
     });
     setIsCartOpen(true);
   };
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
+    if (!user) return;
+    setCartItems((prevItems) => {
+      const updated = prevItems.map((item) => (item.id === id ? { ...item, quantity } : item));
+      localStorage.setItem(`cart_${user.email}`, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleRemoveItem = (id: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    if (!user) return;
+    setCartItems((prevItems) => {
+      const updated = prevItems.filter((item) => item.id !== id);
+      localStorage.setItem(`cart_${user.email}`, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleCheckoutComplete = (order: Order) => {
     if (user) {
-      const updatedUser = { ...user, orders: [order, ...user.orders] };
-      setUser(updatedUser);
-      setAllOrders(prev => [order, ...prev]);
+      addOrder(order);
       setCartItems([]);
+      localStorage.removeItem(`cart_${user.email}`);
     }
   };
 
@@ -156,15 +161,10 @@ export default function App() {
   };
   const handleUpdateProduct = (updated: Product) => setProducts(products.map(p => p.id === updated.id ? updated : p));
   const handleDeleteProduct = (id: string) => setProducts(products.filter(p => p.id !== id));
-  const handleUpdateOrderStatus = (orderId: string, status: Order['status']) => {
-    setAllOrders(allOrders.map(o => o.id === orderId ? { ...o, status } : o));
-    // If current user owns this order, update it in their profile too
-    if (user) {
-      setUser({
-        ...user,
-        orders: user.orders.map(o => o.id === orderId ? { ...o, status } : o)
-      });
-    }
+
+  const handleLogout = async () => {
+    await logout();
+    setIsAdminOpen(false);
   };
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -181,7 +181,7 @@ export default function App() {
       <Navbar
         user={user}
         onLoginClick={() => setIsAuthModalOpen(true)}
-        onLogout={() => { setUser(null); setCartItems([]); setWishlistItems([]); setIsAdminOpen(false); }}
+        onLogout={handleLogout}
         onProfileClick={() => setIsUserProfileOpen(true)}
         onAdminClick={() => setIsAdminOpen(true)}
         cartItemCount={cartItemCount}
@@ -207,7 +207,7 @@ export default function App() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        onLogin={(loggedUser) => setUser(loggedUser)}
+        onLogin={() => {}}
       />
 
       <AdminDashboard 
@@ -218,7 +218,8 @@ export default function App() {
         onUpdateProduct={handleUpdateProduct}
         onDeleteProduct={handleDeleteProduct}
         allOrders={allOrders}
-        onUpdateOrderStatus={handleUpdateOrderStatus}
+        onUpdateOrderStatus={updateOrderStatus}
+        allUsers={allUsers}
         config={config}
         onUpdateConfig={setConfig}
       />
@@ -228,16 +229,11 @@ export default function App() {
           isOpen={isUserProfileOpen}
           onClose={() => setIsUserProfileOpen(false)}
           user={user}
-          onUpdateProfile={(data) => setUser({ ...user, ...data })}
+          onUpdateProfile={updateProfile}
           wishlistItems={wishlistItems}
           onRemoveFromWishlist={handleToggleWishlist}
           onAddToCart={handleAddToCart}
-          onLogout={() => {
-            setUser(null);
-            setCartItems([]);
-            setWishlistItems([]);
-            setIsUserProfileOpen(false);
-          }}
+          onLogout={handleLogout}
         />
       )}
 

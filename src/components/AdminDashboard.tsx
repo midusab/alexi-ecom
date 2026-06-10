@@ -16,6 +16,7 @@ interface AdminDashboardProps {
   onDeleteProduct: (id: string) => void;
   allOrders: Order[];
   onUpdateOrderStatus: (orderId: string, status: Order['status']) => void;
+  allUsers: UserProfile[];
   config: AppConfig;
   onUpdateConfig: (config: AppConfig) => void;
 }
@@ -31,6 +32,7 @@ export function AdminDashboard({
   onDeleteProduct,
   allOrders,
   onUpdateOrderStatus,
+  allUsers,
   config,
   onUpdateConfig
 }: AdminDashboardProps) {
@@ -348,29 +350,21 @@ export function AdminDashboard({
                     <p className="text-slate-500 text-sm">Monitor recent user registrations and login activities.</p>
                   </div>
                   <div className="divide-y divide-slate-100">
-                    {[
-                      { email: 'user_1@gmail.com', name: 'John Doe', status: 'Active', date: '2026-06-07' },
-                      { email: 'user_2@gmail.com', name: 'Jane Smith', status: 'Inactive', date: '2026-06-06' },
-                      { email: 'user_3@gmail.com', name: 'Robert Maina', status: 'Active', date: '2026-06-05' },
-                      { email: 'user_4@gmail.com', name: 'Alice Wambui', status: 'Active', date: '2026-06-05' },
-                      { email: 'user_5@gmail.com', name: 'Samuel Otieno', status: 'Banned', date: '2026-06-04' },
-                    ].map((user) => (
-                      <div key={`user-insight-${user.email}`} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    {allUsers.map((u) => (
+                      <div key={`user-insight-${u.email}`} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500">
-                            {user.name.charAt(0)}
+                            {u.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-900">{user.name}</p>
-                            <p className="text-xs text-slate-500">{user.email} • Registered {user.date}</p>
+                            <p className="text-sm font-bold text-slate-900">{u.name}</p>
+                            <p className="text-xs text-slate-500">{u.email} • {u.role === 'admin' ? 'Administrator' : 'Customer'}</p>
                           </div>
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          user.status === 'Active' ? 'bg-emerald-100 text-emerald-600' :
-                          user.status === 'Banned' ? 'bg-rose-100 text-rose-600' :
-                          'bg-slate-100 text-slate-500'
+                          u.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'
                         }`}>
-                          {user.status}
+                          {u.role === 'admin' ? 'Admin' : 'Active'}
                         </span>
                       </div>
                     ))}

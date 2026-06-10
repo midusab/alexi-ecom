@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
+import { useAuth } from '../../hooks/useAuth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,52 +11,55 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) {
+  const { login, register } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || (!isLogin && !name)) return;
 
-    // Admin check
-    if (isLogin && email === 'alexi@gmail.com' && password === 'alexi123') {
-      onLogin({
-        name: 'Alexi',
-        email: 'alexi@gmail.com',
-        role: 'admin',
-        phone: '+254 712 345 678',
-        location: 'Nairobi, Kenya',
-        orders: [],
-        notifications: []
-      });
+    setError(null);
+    setLoading(true);
+
+    try {
+      let loggedInUser: UserProfile;
+      if (isLogin) {
+        loggedInUser = await login(email, password);
+      } else {
+        loggedInUser = await register(name, email, password);
+      }
+      onLogin(loggedInUser);
+      setName('');
+      setEmail('');
+      setPassword('');
       onClose();
-      return;
+    } catch (err: any) {
+      console.error(err);
+      let friendlyMsg = 'An error occurred. Please try again.';
+      if (
+        err.code === 'auth/invalid-credential' ||
+        err.code === 'auth/wrong-password' ||
+        err.code === 'auth/user-not-found'
+      ) {
+        friendlyMsg = 'Invalid email or password.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        friendlyMsg = 'An account with this email already exists.';
+      } else if (err.code === 'auth/weak-password') {
+        friendlyMsg = 'Password should be at least 6 characters.';
+      } else if (err.code === 'auth/invalid-email') {
+        friendlyMsg = 'Please enter a valid email address.';
+      } else if (err.message) {
+        friendlyMsg = err.message;
+      }
+      setError(friendlyMsg);
+    } finally {
+      setLoading(false);
     }
-    
-    // Simulate authentication
-    onLogin({
-      name: isLogin ? email.split('@')[0] : name,
-      email,
-      role: 'user',
-      phone: '',
-      location: '',
-      orders: [],
-      notifications: [
-        {
-          id: 'n1',
-          title: 'Welcome to TechStore!',
-          message: 'Thank you for registering with us. We hope you enjoy shopping.',
-          date: new Date().toLocaleDateString(),
-          read: false
-        }
-      ]
-    });
-    setName('');
-    setEmail('');
-    setPassword('');
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -92,7 +96,10 @@ export function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) {
           <div className="p-6">
             <div className="flex gap-4 mb-6">
               <button
-                onClick={() => setIsLogin(true)}
+                onClick={() => {
+                  setIsLogin(true);
+                  setError(null);
+                }}
                 className={`flex-1 pb-2 text-sm font-medium border-b-2 transition-colors ${
                   isLogin ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
@@ -100,7 +107,10 @@ export function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) {
                 Sign In
               </button>
               <button
-                onClick={() => setIsLogin(false)}
+                onClick={() => {
+                  setIsLogin(false);
+                  setError(null);
+                }}
                 className={`flex-1 pb-2 text-sm font-medium border-b-2 transition-colors ${
                   !isLogin ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
@@ -110,6 +120,13 @@ export function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                  {error}
+                </div>
+              )}
+
               {!isLogin && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
@@ -165,9 +182,17 @@ export function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) {
 
               <button
                 type="submit"
-                className="btn-primary w-full mt-6"
+                className="btn-primary w-full mt-6 flex justify-center items-center gap-2"
+                disabled={loading}
               >
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Please wait...
+                  </>
+                ) : (
+                  isLogin ? 'Sign In' : 'Create Account'
+                )}
               </button>
             </form>
           </div>
